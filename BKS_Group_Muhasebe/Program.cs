@@ -1,4 +1,6 @@
-﻿namespace BKS_Group_Muhasebe
+﻿using System;
+
+namespace BKS_Group_Muhasebe
 {
     internal class Program
     {
@@ -18,7 +20,7 @@
         static void BaslangicMenu()
         {
             Console.Clear();
-            Console.WriteLine("1. Gelir Ekle\n2. Gider Ekle\n3. Kayıtları Listele\n4. Çıkış");
+            Console.WriteLine("1. Gelir Ekle\n2. Gider Ekle\n3. Kayıtları Listele\n4. Vergi Hesapla\n5. Çıkış");
             Console.Write("Seçiminiz:");
             string secim = Console.ReadLine();
             Console.Clear();
@@ -36,6 +38,10 @@
                 KayıtlariListele();
             }
             else if (secim == "4")
+            {
+                VergiHesapla();
+            }
+            else if (secim == "5")
             {
                 Console.WriteLine("Çıkış Yapılıyor...");
             }
@@ -130,7 +136,7 @@
             Console.WriteLine("{0,-15} {1,-15} {2,-10} {3,-10} {4,-20} {5,-15} {6,-15}", " İşlem Tipi", " Ürün ", "Adet", "B.Fiyat ", "KDV", "Toplam Tutar", "Tarih");
             Console.WriteLine("------------------------------------------------------------------------------------------------------------------------");
             Console.WriteLine("");
-
+            double adet, b_Fiyat, kdv, t_tutar;
             using StreamReader reader = new StreamReader("muhasebe.txt");
             {
                 string[] Satirlar = reader.ReadToEnd().Split("|");
@@ -142,62 +148,97 @@
                     }
 
 
-
                     if (tip == "Gelir")
                     {
+
                         List<string> sutunlar = new List<string>(Satir.Split(','));
                         if (sutunlar.Contains("Gelir"))
                         {
-                            double adet = int.Parse(sutunlar[3]);
-                            double b_Fiyat = int.Parse(sutunlar[4]);
-                            double kdv = int.Parse(sutunlar[5]);
-                            double t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
+                            adet = int.Parse(sutunlar[3]);
+                            b_Fiyat = int.Parse(sutunlar[4]);
+                            kdv = int.Parse(sutunlar[5]);
+                            t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
                             Console.WriteLine("{0,-15} {1,-15} {2,-10} {3,-10} {4,-20} {5,-15} {6,-15}", $"{sutunlar[1]}", $"{sutunlar[2]}", $"{sutunlar[3]}", $"{sutunlar[4]}", $"{sutunlar[5]}", $"{t_tutar}", $"{sutunlar[6]}");
+
                         }
+
                     }
-
-
 
                     if (tip == "Gider")
                     {
                         List<string> sutunlar = new List<string>(Satir.Split(','));
                         if (sutunlar.Contains("Gider"))
                         {
-                            double adet = int.Parse(sutunlar[3]);
-                            double b_Fiyat = int.Parse(sutunlar[4]);
-                            double kdv = int.Parse(sutunlar[5]);
-                            double t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
+                            adet = int.Parse(sutunlar[3]);
+                            b_Fiyat = int.Parse(sutunlar[4]);
+                            kdv = int.Parse(sutunlar[5]);
+                            t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
                             Console.WriteLine("{0,-15} {1,-15} {2,-10} {3,-10} {4,-20} {5,-15} {6,-15}", $"{sutunlar[1]}", $"{sutunlar[2]}", $"{sutunlar[3]}", $"{sutunlar[4]}", $"{sutunlar[5]}", $"{t_tutar}", $"{sutunlar[6]}");
+                        
                         }
                     }
                 }
 
 
-                Menuyedon();
             }
 
+            Menuyedon();
 
 
+        }
 
+        static void VergiHesapla()
+        {
+            double adet, b_Fiyat, kdv, t_tutar,gelirvergisi;
+            double topgelir = 0;
+            double topgider = 0; 
+            double topkdvgelir = 0;
+            double topkdvgider = 0;
+            using StreamReader reader = new StreamReader("muhasebe.txt");
+            {
+                string[] Satirlar = reader.ReadToEnd().Split("|");
+                foreach (var Satir in Satirlar)
+                {
+                    if (string.IsNullOrEmpty(Satir))
+                    {
+                        continue;
+                    }
+                    List<string> sutunlar = new List<string>(Satir.Split(','));
+                    if (sutunlar.Contains("Gelir"))
+                    {
+                        adet = int.Parse(sutunlar[3]);
+                        b_Fiyat = int.Parse(sutunlar[4]);
+                        kdv = int.Parse(sutunlar[5]);
+                        t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
+                        topgelir += t_tutar; 
+                        topkdvgelir += t_tutar-(adet*b_Fiyat);
+                    }
+                    if (sutunlar.Contains("Gider"))
+                    {
+                        adet = int.Parse(sutunlar[3]);
+                        b_Fiyat = int.Parse(sutunlar[4]);
+                        kdv = int.Parse(sutunlar[5]);
+                        t_tutar = Math.Round(adet * b_Fiyat * ((100 + kdv) / 100));
+                        topgider += t_tutar;
+                        topkdvgider += t_tutar - (adet * b_Fiyat);
+                    }
+                }
+               
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            }
+            gelirvergisi = (topgelir - topgider) * 0.2;
+            Console.WriteLine("");
+            Console.WriteLine($"Toplam Gelir  : {topgelir} TL");
+            Console.WriteLine($"Toplam Gider  : {topgider} TL");
+            Console.WriteLine($"Matrah        : {topgelir - topgider} TL");
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.WriteLine($"Gelir Vergisi : {gelirvergisi} TL");
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.WriteLine($"KDV           : {(topkdvgelir - topkdvgider)} TL");
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.WriteLine($"Toplam Vergi  : {(gelirvergisi+topkdvgelir - topkdvgider)} TL");
+            Console.WriteLine("----------------------------------------------------------------------");
+            Menuyedon();
         }
     }
 }
